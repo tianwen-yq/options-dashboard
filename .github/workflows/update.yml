@@ -1,0 +1,36 @@
+name: 每日数据更新
+
+on:
+  schedule:
+    # 北京时间 16:30 = UTC 8:30，周一至周五
+    - cron: '30 8 * * 1-5'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: |
+          pip install pandas numpy tqsdk
+
+      - name: 更新数据
+        env:
+          TQSDK_USER: ${{ secrets.TQSDK_USER }}
+          TQSDK_PWD: ${{ secrets.TQSDK_PWD }}
+        run: python run_daily_update.py
+
+      - name: 提交更新
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/options_analysis.db
+          git diff --staged --quiet || (git commit -m "auto: 每日数据更新 $(date +%Y-%m-%d)" && git push)
