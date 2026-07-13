@@ -303,10 +303,15 @@ def Q(sql,params=()):
 
 @st.cache_data(ttl=30)
 def QDF(sql,params=()):
-    conn=sqlite3.connect(cfg.DB_PATH)
-    df=pd.read_sql_query(sql,conn,params=params)
-    conn.close()
-    return df
+    for _ in range(3):
+        try:
+            conn=sqlite3.connect(cfg.DB_PATH)
+            df=pd.read_sql_query(sql,conn,params=params)
+            conn.close()
+            return df
+        except Exception:
+            import time; time.sleep(2)
+    return pd.DataFrame()
 
 @st.cache_data(ttl=30)
 def LDate(table,code=None):
