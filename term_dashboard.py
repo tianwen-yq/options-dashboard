@@ -782,6 +782,7 @@ with col_iv:
     atm_iv_data=[]
     prev_atm_map={}
     for exp in sorted(OD["expiry"].unique()):
+        if datetime(2000+int(exp[:2]), int(exp[2:]), 15) < datetime.now(): continue
         edf=OD[OD["expiry"]==exp]; ec=edf[edf["otype"]=="C"]; ep=edf[edf["otype"]=="P"]
         if ec.empty or ep.empty: continue
         atm_idx = (ec["strike"]-spot).abs().values.argmin()
@@ -909,6 +910,7 @@ with col_sk:
     exp_labels = []
     
     for exp in sorted(OD["expiry"].unique()):
+        if datetime(2000+int(exp[:2]), int(exp[2:]), 15) < datetime.now(): continue
         edf = OD[OD["expiry"] == exp]
         ec = edf[edf["otype"] == "C"]
         ep = edf[edf["otype"] == "P"]
@@ -1299,8 +1301,10 @@ with col_nm2:
 
 # ═══════════════════════════ 4. 合约IV微笑 ═══════════════════════════
 st.markdown('<div class="section-title">📋 合约IV微笑</div>',unsafe_allow_html=True)
-# 直接取期权到期月，不再依赖期货合约月份
+# 直接取期权到期月（过滤已到期：15日已过的不展示）
 smile_expiries = sorted(OD["expiry"].unique())
+smile_expiries = [e for e in smile_expiries
+    if datetime(2000+int(e[:2]), int(e[2:]), 15) >= datetime.now()]
 # 取前3个到期月，同时查对应期货价格做参考
 smile_cols_data = []
 for exp in smile_expiries:
